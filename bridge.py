@@ -5,7 +5,7 @@ import struct
 clients = []
 
 server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-server.bind(('localhost',1234))
+server.bind(('0.0.0.0',1234))
 server.listen(socket.SOMAXCONN)
 
 
@@ -18,10 +18,9 @@ def clienthandler(client):
     while True:
         try:
             # get size of wanted data
-            size = client.recv(4)
-
+            size = client.recv(1024)
             # get data
-            data = client.recv(struct.unpack("!i",size)[0])
+            data = client.recv(int(size.decode()))
             # send data to master
             try:
                 # send size
@@ -34,6 +33,7 @@ def clienthandler(client):
                 with open("cache","a+") as f:
                     f.write(data)
         except:
+            print("client offline")
             client.close()
             removeclient(client)
             break
@@ -42,9 +42,9 @@ def clienthandler(client):
 def masterhandler():
     while True:
         # get size of wanted data
-        size = master.recv(4)
+        size = master.recv(1024)
         # get data
-        data = master.recv(struct.unpack("!i",size)[0])
+        data = master.recv(int(size.decode()))
         # send data to slave
         for slave in clients:
             try:
