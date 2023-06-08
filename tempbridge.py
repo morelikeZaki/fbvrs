@@ -39,8 +39,7 @@ def HandleMaster(cli):
 
 def HandleClient(cli):
     while True:
-        resp = receive(cli)
-        send(resp,MASTER)
+        send(receive(cli),MASTER)
 
 
 bridge = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
