@@ -15,3 +15,4 @@ while len(data) < datasize:
 
 with open("photo.jpg","wb") as f:
     f.write(data)
+    

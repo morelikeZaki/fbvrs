@@ -4,8 +4,8 @@ import struct
 
 clients = []
 
-server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-server.bind(('0.0.0.0',1234))
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(("0.0.0.0", 1234))
 server.listen(socket.SOMAXCONN)
 
 
@@ -30,7 +30,7 @@ def clienthandler(client):
             except:
                 # master isnt connected
                 # so store in cache
-                with open("cache","a+") as f:
+                with open("cache", "a+") as f:
                     f.write(data)
         except:
             print("client offline")
@@ -54,13 +54,12 @@ def masterhandler():
                 # slave offline
                 pass
 
-master,_ = server.accept()
+
+master, _ = server.accept()
 threading.Thread(target=masterhandler).start()
 print("master connected!")
 while True:
-    client,addr = server.accept()
+    client, addr = server.accept()
     print("client connected!")
     clients.append(client)
-    threading.Thread(target=clienthandler,args=[client]).start()
-
-    
+    threading.Thread(target=clienthandler, args=[client]).start()
