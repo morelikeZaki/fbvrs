@@ -235,7 +235,7 @@ bridge.send(b"slave")
 while True:
     command = receive(bridge)
     if command == "screenshare":
-        pass
+        print("nah")
     
     if command == "screenshot":
         send(get_frame(), bridge)
