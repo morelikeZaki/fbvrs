@@ -236,7 +236,7 @@ while True:
     command = receive(bridge)
     if command == "screenshare":
         print("nah")
-    
+
     if command == "screenshot":
         send(get_frame(), bridge)
 
