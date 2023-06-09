@@ -1,65 +1,62 @@
 import socket
-import threading
 import struct
+import threading
+import pickle
 
-clients = []
+MASTER = None
+CLIENTS = []
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("0.0.0.0", 1234))
-server.listen(socket.SOMAXCONN)
+def receive(cli):
+    data = b""
+    payload_size = struct.calcsize('>L')
+    while len(data) < payload_size:
+        received = cli.recv(4096) 
+        data += received
+    packed_msg_size = data[:payload_size]
+    data = data[payload_size:]
+    msg_size = struct.unpack('>L',packed_msg_size)[0]
+    while len(data) < msg_size:
+        data += cli.recv(4096)
+
+    frame_data = data[:msg_size]
+
+    #data = data[msg_size:]
+
+    return pickle.loads(frame_data,fix_imports=True,encoding="bytes")
 
 
-def removeclient(client):
-    if client in clients:
-        clients.remove(client)
+def send(data,cli):
+    data = pickle.dumps(data,0)
+    size = len(data)
+    cli.sendall(struct.pack('>L',size)+data)
 
 
-def clienthandler(client):
+def HandleMaster(cli):
     while True:
-        try:
-            # get size of wanted data
-            size = client.recv(1024)
-            # get data
-            data = client.recv(int(size.decode()))
-            # send data to master
-            try:
-                # send size
-                master.send(size)
-                # send data
-                master.send(data)
-            except:
-                # master isnt connected
-                # so store in cache
-                with open("cache", "a+") as f:
-                    f.write(data)
-        except:
-            print("client offline")
-            client.close()
-            removeclient(client)
-            break
+        command = receive(cli)
+        for slave in CLIENTS:
+            send(command,slave)
 
-
-def masterhandler():
+def HandleClient(cli):
     while True:
-        # get size of wanted data
-        size = master.recv(1024)
-        # get data
-        data = master.recv(int(size.decode()))
-        # send data to slave
-        for slave in clients:
-            try:
-                slave.send(size)
-                slave.send(data)
-            except:
-                # slave offline
-                pass
+        send(receive(cli),MASTER)
 
 
-master, _ = server.accept()
-threading.Thread(target=masterhandler).start()
-print("master connected!")
+bridge = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+bridge.bind(("localhost",9999))
+bridge.listen(socket.SOMAXCONN)
+
+
 while True:
-    client, addr = server.accept()
-    print("client connected!")
-    clients.append(client)
-    threading.Thread(target=clienthandler, args=[client]).start()
+    cli_,addr = bridge.accept()
+    if cli_.recv(1024).decode() == "master":
+        MASTER = cli_
+        threading.Thread(target=HandleMaster,args=(MASTER,)).start()
+        print("Master Connected!")
+    else:
+        CLIENTS.append(cli_)
+        threading.Thread(target=HandleClient,args=(cli_,)).start()
+        print("Client Connected!")
+
+
+
