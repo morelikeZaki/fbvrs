@@ -21,8 +21,6 @@ def receive(cli):
 
     frame_data = data[:msg_size]
 
-    # data = data[msg_size:]
-
     return pickle.loads(frame_data, fix_imports=True, encoding="bytes")
 
 
@@ -35,14 +33,28 @@ def send(data, cli):
 def HandleMaster(cli):
     while True:
         command = receive(cli)
-        for slave in CLIENTS:
-            send(command, slave)
+        if command != b"":
+            for slave in CLIENTS:
+                try:
+                    send(command, slave)
+                except:
+                    cli.disconnect()
+                    CLIENTS.remove(cli)
+        else:
+            cli.disconnect()
+            CLIENTS.remove(cli)
+            break
+            
 
 
 def HandleClient(cli):
     while True:
-        send(receive(cli), MASTER)
-
+        try:
+            send(receive(cli), MASTER)
+        except:
+            cli.disconnect()
+            CLIENTS.remove(cli)
+            
 
 bridge = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 bridge.bind(("localhost", 9999))
